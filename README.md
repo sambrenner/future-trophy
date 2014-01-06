@@ -5,4 +5,4 @@ The Trophy of the Future (name subject to improvement) is the world's first inte
 
 Fabrication is mostly complete and I am now in the process of developing the software. Full documentation will be made available soon.
 
-![Trophy In Progress](samjbrenner.com/stuff/trophy.jpg "Trophy In Progress")
+![Trophy In Progress](http://samjbrenner.com/stuff/trophy.jpg "Trophy In Progress")
