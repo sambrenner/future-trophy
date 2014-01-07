@@ -1,0 +1,7 @@
+{
+  "champions" : [
+    {"year": 2013, "teamname": "TurnYourHeadAndCoughlin", "owner": "Dave Firestone"},
+    {"year": 2012, "teamname": "Mr. Bananagrabber", "owner": "Sam Brenner"},
+    {"year": 2011, "teamname": "Gil Parcells", "owner": "Gilad Edelman"}
+  ]
+}
