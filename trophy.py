@@ -1,20 +1,21 @@
+from sys import argv
 import feedparser
 import json
 import urllib
 
+trophy_data_path = 'http://www.samjbrenner.com/projects/trophy/trophy.json'
+nfl_news_path = ''
+news_stories_max = 0
 message_buffer_path = 'message_buffer.txt'
-nfl_news_path = 'http://www.cbssports.com/partners/feeds/rss/nfl_news'
-champions_path = 'http://www.samjbrenner.com/projects/trophy/champions.json'
+offline_data_path = 'offline_data.txt'
 
-# functions for arduino to call
+# arduino interface functions
 def init():
-  message_buffer = open(message_buffer_path, 'w+')
-  message_buffer.writelines([
-    "WESTFIELD ATHLETIC CLUB\n", 
-    "TROPHY OF CHAMPIONS\n"
-  ])
+  get_trophy_data()
+  get_nfl_news()
 
-#def get_next_message():
+def get_next_message():
+  print 'Test'
 
 # network functionality
 def get_nfl_news():
@@ -22,11 +23,31 @@ def get_nfl_news():
   for entry in nfl_feed.entries:
     print entry.title
 
-def get_champions():
-  json_response = urllib.urlopen(champions_path)
+def get_trophy_data():
+  json_response = urllib.urlopen(trophy_data_path)
   data = json.loads(json_response.read())
+
+  nfl_news_path = data['nfl_news_path']
+  news_stories_max = data['news_stories_max']
+
+  store_offline_data(data)
+
+def store_offline_data(data):
+  offline_data = open(offline_data_path, 'w')
+
+  offline_data.write(data['offline_warning'])
+
+  for line in data['intro_message']:
+    offline_data.write("%s\n" % line)
+
   for champion in data['champions']:
-    print "%s: %s, %s" % (champion['year'], champion['owner'], champion['teamname'])
+    offline_data.write("%s: %s, %s\n" % (champion['year'], champion['owner'], champion['teamname']))
 
+  offline_data.close()
 
-get_champions()
+if argv[1] == 'init':
+  init()
+elif argv[1] == 'nextmsg':
+  get_next_message()
+else:
+  print 'Please supply a valid command.'
