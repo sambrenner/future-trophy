@@ -1,0 +1,14 @@
+{
+  "intro_message": [
+    "WESTFIELD ATHLETIC CLUB",
+    "TROPHY OF CHAMPIONS"
+  ],
+  "offline_warning": "Error connecting to internet...",
+  "nfl_news_path": "http://www.cbssports.com/partners/feeds/rss/nfl_news",
+  "news_stories_max": 5,
+  "champions": [
+    {"year": 2013, "teamname": "TurnYourHeadAndCoughlin", "owner": "Dave Firestone"},
+    {"year": 2012, "teamname": "Mr. Bananagrabber", "owner": "Sam Brenner"},
+    {"year": 2011, "teamname": "Gil Parcells", "owner": "Gilad Edelman"}
+  ]
+}
