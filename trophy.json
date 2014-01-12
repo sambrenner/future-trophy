@@ -4,6 +4,7 @@
     "TROPHY OF CHAMPIONS"
   ],
   "offline_warning": "Error connecting to internet...",
+  "nfl_news_intro": "Today in the NFL...",
   "nfl_news_path": "http://www.cbssports.com/partners/feeds/rss/nfl_news",
   "news_stories_max": 5,
   "champions": [
