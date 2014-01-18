@@ -1,3 +1,7 @@
 .python-version
+
 apikey.py
 apikey.pyc
+
+message_buffer.txt
+offline_data.txt
