@@ -5,8 +5,14 @@
   ],
   "offline_warning": "Error connecting to internet...",
   "nfl_news_intro": "Today in the NFL...",
+  "league_standings_intro": "Regular Season Leaderboard",
   "nfl_news_path": "http://www.cbssports.com/partners/feeds/rss/nfl_news",
   "news_stories_max": 5,
+  "league_api_path": "http://www.kimonolabs.com/api/2sj8zf76?apikey=API_KEY",
+  "league_api_collection_names": [
+    "results", 
+    "collection1"
+  ],
   "champions": [
     {"year": 2013, "teamname": "TurnYourHeadAndCoughlin", "owner": "Dave Firestone"},
     {"year": 2012, "teamname": "Mr. Bananagrabber", "owner": "Sam Brenner"},

@@ -1,22 +1,19 @@
 from sys import argv
+import os
 import feedparser
 import json
 import urllib
+import apikey
 
 trophy_data_path = 'http://www.samjbrenner.com/projects/trophy/trophy.json'
 nfl_news_path = ''
 nfl_news_intro = ''
+league_api_path = ''
+league_standings_intro = ''
+league_api_collection_names = []
 news_stories_max = 0
 message_buffer_path = 'message_buffer.txt'
 offline_data_path = 'offline_data.txt'
-
-# arduino interface functions
-def init():
-  try:
-    get_trophy_data()
-  except IOError as e:
-    print "No network connection"
-    # no internet fallback
 
 def get_next_message():
   message_buffer = open(message_buffer_path, 'a+')
@@ -24,9 +21,18 @@ def get_next_message():
 
   # if file is empty, refill buffer
   if message_buffer.readline() == '':
-    with open(offline_data_path) as offline_data:
-      message_buffer.writelines("%s" % item for item in offline_data.readlines()[1:])
-    message_buffer.writelines("%s\n" % item for item in get_nfl_news())
+    try:
+      get_trophy_data()
+
+      with open(offline_data_path) as offline_data:
+        message_buffer.writelines("%s" % item for item in offline_data.readlines()[1:])
+      
+      message_buffer.writelines("%s\n" % item for item in get_league_data())
+      message_buffer.writelines("%s\n" % item for item in get_nfl_news())
+    
+    except IOError as e:
+      with open(offline_data_path) as offline_data:
+        message_buffer.writelines("%s" % item for item in offline_data.readlines()[1:])
     
   # get first line
   message_buffer.seek(0)
@@ -39,9 +45,25 @@ def get_next_message():
   message_buffer.writelines("%s" % item for item in remaining_lines)
   message_buffer.close()
 
+  print next_message
   return next_message
 
 # network functionality
+def get_trophy_data():
+  global nfl_news_path, nfl_news_intro, news_stories_max, league_api_path, league_api_collection_names, league_standings_intro
+
+  json_response = urllib.urlopen(trophy_data_path)
+  data = json.loads(json_response.read())
+
+  nfl_news_path = data['nfl_news_path']
+  nfl_news_intro = data['nfl_news_intro']
+  news_stories_max = data['news_stories_max']
+  league_api_path = data['league_api_path'] + apikey.value
+  league_api_collection_names = data['league_api_collection_names']
+  league_standings_intro = data['league_standings_intro']
+
+  store_offline_data(data)
+
 def get_nfl_news():
   nfl_feed = feedparser.parse(nfl_news_path)
   
@@ -52,19 +74,19 @@ def get_nfl_news():
 
   return titles
 
-def get_trophy_data():
-  global nfl_news_path
-  global nfl_news_intro
-  global news_stories_max
-
-  json_response = urllib.urlopen(trophy_data_path)
+def get_league_data():
+  json_response = urllib.urlopen(league_api_path)
   data = json.loads(json_response.read())
 
-  nfl_news_path = data['nfl_news_path']
-  nfl_news_intro = data['nfl_news_intro']
-  news_stories_max = data['news_stories_max']
+  standings = [league_standings_intro]
 
-  store_offline_data(data)
+  for collection_name in league_api_collection_names:
+    data = data[collection_name]
+
+  for player in sorted(data, key=lambda x:int(x['rank'])):
+    standings.append("%s: %s, %s (%s)" % (player['rank'], player['name']['text'], player['record'], player['streak']))
+
+  return standings
 
 # file i/o
 def store_offline_data(data):
@@ -82,13 +104,10 @@ def store_offline_data(data):
 
 # instructions
 if len(argv) > 1:
-  if argv[1] == 'init':
-    init()
-  elif argv[1] == 'nextmsg':
+  if argv[1] == 'nextmsg':
     get_next_message()
   else:
     print 'Please supply a valid command.'
 else:
-  init()
-  get_next_message()
-  'Please supply a command.'
+  print apikey.value
+  print 'Please supply a command.'
