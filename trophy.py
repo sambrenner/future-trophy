@@ -58,7 +58,7 @@ def get_trophy_data():
   nfl_news_path = data['nfl_news_path']
   nfl_news_intro = data['nfl_news_intro']
   news_stories_max = data['news_stories_max']
-  league_api_path = data['league_api_path'] + apikey.value
+  league_api_path = data['league_api_path'].replace('API_KEY', apikey.value)
   league_api_collection_names = data['league_api_collection_names']
   league_standings_intro = data['league_standings_intro']
 
