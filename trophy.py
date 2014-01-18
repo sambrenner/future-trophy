@@ -109,5 +109,4 @@ if len(argv) > 1:
   else:
     print 'Please supply a valid command.'
 else:
-  print apikey.value
   print 'Please supply a command.'
