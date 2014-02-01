@@ -1,6 +1,7 @@
 #include <MD_Parola.h>
 #include <MD_MAX72xx.h>
 #include <SPI.h>
+#include <Process.h>
 
 //arduino pins
 #define	MAX_DEVICES 5
@@ -15,12 +16,13 @@ uint8_t	frameDelay = 100;
 
 void setup() {
   initScroller();
+  Bridge.begin();
   scrollNextMessage();
 }
 
 void loop() {
   if (scroller.displayAnimate()) {
-    //request next message from linino
+    scrollNextMessage();
   }
 }
 
@@ -28,8 +30,23 @@ void initScroller() {
   scroller.begin();
   scroller.displayClear();
   scroller.displaySuspend(false);
+  
+  scroller.displayScroll("loading...", MD_Parola::LEFT, scrollEffect, frameDelay);
 }
 
-void scrollNextMessage(char message[]) {
-  scroller.displayScroll(message, MD_Parola::LEFT, scrollEffect, frameDelay);
+void scrollNextMessage() {
+  Process process;
+  String nextMessage = "";
+
+  process.runShellCommand("python /root/trophy/trophy.py nextmsg");
+  while(process.running());
+
+  while(process.available()) {
+    nextMessage += (char)process.read();
+  }
+  
+  char msg[nextMessage.length()];
+  nextMessage.toCharArray(msg, nextMessage.length() - 1);
+  
+  scroller.displayScroll(msg, MD_Parola::LEFT, scrollEffect, frameDelay);
 }
