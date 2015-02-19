@@ -5,48 +5,89 @@
 
 //arduino pins
 #define	MAX_DEVICES 5
-#define	CLK_PIN 10
-#define	DATA_PIN 8
-#define	CS_PIN 9
+#define	CLK_PIN 8
+#define	DATA_PIN 3
+#define	CS_PIN 12
 
 //parola
+#define	BUF_SIZE 75
 MD_Parola scroller = MD_Parola(DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
-MD_Parola::textEffect_t	scrollEffect = MD_Parola::SCROLL_LEFT;
-uint8_t	frameDelay = 100;
+uint8_t	frameDelay = 40;
+char nextMessage[BUF_SIZE];
+
+//arduino
+boolean contactWithLinino = false;
+boolean bridgeBegan = false;
+int countPercentSigns = 0;
+int expectedPercentSigns = 3;
 
 void setup() {
-  initScroller();
-  Bridge.begin();
-  scrollNextMessage();
-}
+  Serial1.begin(250000);
 
-void loop() {
-  if (scroller.displayAnimate()) {
-    scrollNextMessage();
-  }
-}
-
-void initScroller() {
   scroller.begin();
   scroller.displayClear();
   scroller.displaySuspend(false);
-  
-  scroller.displayScroll("loading...", MD_Parola::LEFT, scrollEffect, frameDelay);
 }
 
-void scrollNextMessage() {
+void loop() {
+  //only run when scroller is ready
+  if (scroller.displayAnimate()){
+    
+    //if we are still waiting for linino to boot:
+    if (!contactWithLinino) {
+      if (Serial1.available()) {
+        char c = (char)Serial1.read();
+      
+        if (c=='%') {
+          countPercentSigns++;
+          if (countPercentSigns == expectedPercentSigns){
+            contactWithLinino = true;
+          }
+        }
+      } else {
+        displayMessage("Loading...");
+      }
+    } 
+    
+    //linino has booted.
+    else {
+      //have we initialized contact with Bridge?
+      if (!bridgeBegan) {
+        Bridge.begin();
+        bridgeBegan = true;
+      }
+    
+      //request the trophy message
+      scrollNextTrophyMessage();
+    }
+  }
+}
+
+void scrollNextTrophyMessage() {
   Process process;
-  String nextMessage = "";
+  String pyMessage = "";
 
   process.runShellCommand("python /root/trophy/trophy.py nextmsg");
-  while(process.running());
+  
+  while(process.running()) {}
 
   while(process.available()) {
-    nextMessage += (char)process.read();
+    char next = process.read();
+
+    if (next != '\n' && next != '\r') {
+      pyMessage += next;
+    }
   }
+
+  char *msg = new char[pyMessage.length() + 1];
+  strcpy(msg, pyMessage.c_str());
   
-  char msg[nextMessage.length()];
-  nextMessage.toCharArray(msg, nextMessage.length() - 1);
+  displayMessage(msg);
   
-  scroller.displayScroll(msg, MD_Parola::LEFT, scrollEffect, frameDelay);
+  delete [] msg;
+}
+
+void displayMessage(char* msg) {
+  strcpy(nextMessage, msg);
+  scroller.displayScroll(nextMessage, MD_Parola::LEFT, MD_Parola::SCROLL_LEFT, frameDelay);
 }
