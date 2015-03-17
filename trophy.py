@@ -15,29 +15,40 @@ news_stories_max = 0
 message_buffer_path = 'message_buffer.txt'
 offline_data_path = 'offline_data.txt'
 
+def clear_buffer():
+  open(message_buffer_path, 'w').close()
+
+def fill_buffer():
+  message_buffer = open(message_buffer_path, 'a+')
+  message_buffer.seek(0)
+
+  try:
+    get_trophy_data()
+
+    with open(offline_data_path) as offline_data:
+      message_buffer.writelines("%s" % item for item in offline_data.readlines()[1:])
+
+    message_buffer.writelines("%s\n" % item for item in get_league_data())
+    message_buffer.writelines("%s\n" % item for item in get_nfl_news())
+    
+  except IOError as e:
+    with open(offline_data_path) as offline_data:
+      message_buffer.writelines("%s" % item for item in offline_data.readlines()[1:])
+  
 def get_next_message():
   message_buffer = open(message_buffer_path, 'a+')
   message_buffer.seek(0)
 
-  # if file is empty, refill buffer
-  if message_buffer.readline() == '':
-    try:
-      get_trophy_data()
+  current_lines = message_buffer.readlines()
 
-      with open(offline_data_path) as offline_data:
-        message_buffer.writelines("%s" % item for item in offline_data.readlines()[1:])
-      
-      message_buffer.writelines("%s\n" % item for item in get_league_data())
-      message_buffer.writelines("%s\n" % item for item in get_nfl_news())
-    
-    except IOError as e:
-      with open(offline_data_path) as offline_data:
-        message_buffer.writelines("%s" % item for item in offline_data.readlines()[1:])
-    
-  # get first line
-  message_buffer.seek(0)
-  next_message = message_buffer.readline()
-  
+  if len(current_lines) == 0:
+    # if this is the last message, STOP
+    next_message = "STOP"
+  else:
+    # get first line
+    message_buffer.seek(0)
+    next_message = message_buffer.readline()
+
   # replace file with all lines except for the first line
   remaining_lines = message_buffer.readlines()
   message_buffer.seek(0)
@@ -106,6 +117,12 @@ def store_offline_data(data):
 if len(argv) > 1:
   if argv[1] == 'nextmsg':
     get_next_message()
+  elif argv[1] == 'clearbuffer':
+    clear_buffer()
+    print "ok"
+  elif argv[1] == 'fillbuffer':
+    fill_buffer()
+    print "ok"
   else:
     print 'Please supply a valid command.'
 else:
