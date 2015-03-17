@@ -72,11 +72,10 @@ void loop() {
 					resetTrophyMessageBuffer();
 				}
 
+				//update state variables
 				inMessageCycle = true;
-
-				//begin message cycle
-				bufferLininoCommunication('0');
 				firstRun = false;
+				bufferLininoCommunication('0');
 				
 				boolean finished = scrollNextTrophyMessage();
 
