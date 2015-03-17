@@ -68,13 +68,16 @@ void loop() {
 			//we run the next message when we have booted, when cron tells us to,
 			//or when we are in the middle of a message cycle
 			if(firstRun || hasLininoSaid("%%!") || inMessageCycle) {
+				if(firstRun) {
+					resetTrophyMessageBuffer();
+				}
+
 				inMessageCycle = true;
 
 				//begin message cycle
 				bufferLininoCommunication('0');
 				firstRun = false;
-
-				resetTrophyMessageBuffer();
+				
 				boolean finished = scrollNextTrophyMessage();
 
 				if(finished) {
