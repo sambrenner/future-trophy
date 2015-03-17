@@ -78,7 +78,7 @@ void loop() {
 				boolean finished = scrollNextTrophyMessage();
 
 				if(finished) {
-					inMessagecycle = false;
+					inMessageCycle = false;
 				}
 			} else {
 				// hang out
@@ -90,7 +90,7 @@ void loop() {
 
 //Gets the next message from the python script and scrolls it across the trophy.
 //Returns true when it is finished, otherwise false.
-void scrollNextTrophyMessage() {
+boolean scrollNextTrophyMessage() {
 	Process process;
 	String pyMessage = "";
 
