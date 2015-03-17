@@ -89,13 +89,16 @@ def get_league_data():
   json_response = urllib.urlopen(league_api_path)
   data = json.loads(json_response.read())
 
-  if data['error']:
+  if data.get('error', False):
     return ['There was a problem loading the league standings.']
 
   standings = [league_standings_intro]
 
   for collection_name in league_api_collection_names:
-    data = data[collection_name]
+    if data.get(collection_name, False):
+      data = data[collection_name]
+    else:
+      return ['There was a problem loading the league standings.']
 
   for player in sorted(data, key=lambda x:int(x['rank'])):
     standings.append("%s: %s, %s (%s)" % (player['rank'], player['name']['text'], player['record'], player['streak']))
