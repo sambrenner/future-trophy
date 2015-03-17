@@ -19,6 +19,7 @@ char nextMessage[BUF_SIZE];
 boolean contactWithLinino = false;
 boolean bridgeBegan = false;
 boolean firstRun = true;
+boolean inMessageCycle = false;
 
 /*	
 linino-atmega communication
@@ -63,20 +64,32 @@ void loop() {
 				Bridge.begin();
 				bridgeBegan = true;
 			}
-      
-			if(firstRun || hasLininoSaid("%%!")) {
+
+			//we run the next message when we have booted, when cron tells us to,
+			//or when we are in the middle of a message cycle
+			if(firstRun || hasLininoSaid("%%!") || inMessageCycle) {
+				inMessageCycle = true;
+
+				//begin message cycle
 				bufferLininoCommunication('0');
 				firstRun = false;
-        
-				scrollNextTrophyMessage();
+
+				resetTrophyMessageBuffer();
+				boolean finished = scrollNextTrophyMessage();
+
+				if(finished) {
+					inMessagecycle = false;
+				}
 			} else {
 				// hang out
-				delay(10000);
+				delay(30000);
 			}
 		}
 	}
 }
 
+//Gets the next message from the python script and scrolls it across the trophy.
+//Returns true when it is finished, otherwise false.
 void scrollNextTrophyMessage() {
 	Process process;
 	String pyMessage = "";
@@ -93,12 +106,29 @@ void scrollNextTrophyMessage() {
 		}
 	}
 
+	//STOP is a special message sent from Linino when the message cycle
+	//has finished. For the Arduino, that means back to waiting for cron.
+	if (pyMessage == "STOP") {
+		return true;
+	}
+
 	char *msg = new char[pyMessage.length() + 1];
 	strcpy(msg, pyMessage.c_str());
   
 	displayMessage(msg);
   
 	delete [] msg;
+
+	return false;
+}
+
+void resetTrophyMessageBuffer() {
+	Process process;
+	process.runShellCommand("python /root/trophy/trophy.py clearbuffer");
+	while(process.running()) {}
+
+	process.runShellCommand("python /root/trophy/trophy.py fillbuffer");
+	while(process.running()) {}
 }
 
 void displayMessage(char* msg) {
