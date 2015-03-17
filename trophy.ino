@@ -20,106 +20,108 @@ boolean contactWithLinino = false;
 boolean bridgeBegan = false;
 boolean firstRun = true;
 
-/*  linino-atmega communication
-    we listen to linino for "special strings": 
-    %%% signals that the linino has booted
-    %%! comes from a cron job on every hour, we will run the trophy at this point */
+/*	
+linino-atmega communication
+lininoChars is a buffer of the last 3 characters to come through Serial1.
+we are listening for these "magic strings":
+%%% signals that the linino has booted
+%%! comes from a cron job on every hour, we will run the trophy at this point */
 char lininoChars[4] = "000";
 
 void setup() {
-  Serial1.begin(250000);
+	Serial1.begin(250000);
 
-  scroller.begin();
-  scroller.displayClear();
-  scroller.displaySuspend(false);
+	scroller.begin();
+	scroller.displayClear();
+	scroller.displaySuspend(false);
 }
 
 void loop() {
-  //read serial buffer
-  while (Serial1.available() > 0) {
-    char c = (char)Serial1.read();
-    bufferLininoCommunication(c);
-  }
+	//read serial buffer
+	while (Serial1.available() > 0) {
+		char c = (char)Serial1.read();
+		bufferLininoCommunication(c);
+	}
   
-  //only run when scroller is ready
-  if (scroller.displayAnimate()){
+	//only run when scroller is ready
+	if (scroller.displayAnimate()){
     
-    //if we are still waiting for linino to boot:
-    if (!contactWithLinino) {
-      // check boot complete
-      if(hasLininoSaid("%%%") && !contactWithLinino){
-        contactWithLinino = true;
-      } else {
-        displayMessage("Loading...");
-      }
-    } 
+		//if we are still waiting for linino to boot:
+		if (!contactWithLinino) {
+			// check boot complete
+			if(hasLininoSaid("%%%") && !contactWithLinino){
+				contactWithLinino = true;
+			} else {
+				displayMessage("Loading...");
+			}
+		} 
     
-    //linino has booted.
-    else {
-      //have we initialized contact with Bridge?
-      if (!bridgeBegan) {
-        Bridge.begin();
-        bridgeBegan = true;
-      }
+		//linino has booted.
+		else {
+			//have we initialized contact with Bridge?
+			if (!bridgeBegan) {
+				Bridge.begin();
+				bridgeBegan = true;
+			}
       
-      if(firstRun || hasLininoSaid("%%!")) {
-        bufferLininoCommunication('0');
-        firstRun = false;
+			if(firstRun || hasLininoSaid("%%!")) {
+				bufferLininoCommunication('0');
+				firstRun = false;
         
-        scrollNextTrophyMessage();
-      } else {
-        // hang out
-        delay(10000);
-      }
-    }
-  }
+				scrollNextTrophyMessage();
+			} else {
+				// hang out
+				delay(10000);
+			}
+		}
+	}
 }
 
 void scrollNextTrophyMessage() {
-  Process process;
-  String pyMessage = "";
+	Process process;
+	String pyMessage = "";
 
-  process.runShellCommand("python /root/trophy/trophy.py nextmsg");
+	process.runShellCommand("python /root/trophy/trophy.py nextmsg");
   
-  while(process.running()) {}
+	while(process.running()) {}
 
-  while(process.available()) {
-    char next = process.read();
+	while(process.available()) {
+		char next = process.read();
 
-    if (next != '\n' && next != '\r') {
-      pyMessage += next;
-    }
-  }
+		if (next != '\n' && next != '\r') {
+			pyMessage += next;
+		}
+	}
 
-  char *msg = new char[pyMessage.length() + 1];
-  strcpy(msg, pyMessage.c_str());
+	char *msg = new char[pyMessage.length() + 1];
+	strcpy(msg, pyMessage.c_str());
   
-  displayMessage(msg);
+	displayMessage(msg);
   
-  delete [] msg;
+	delete [] msg;
 }
 
 void displayMessage(char* msg) {
-  strcpy(nextMessage, msg);
-  scroller.displayScroll(nextMessage, MD_Parola::LEFT, MD_Parola::SCROLL_LEFT, frameDelay);
+	strcpy(nextMessage, msg);
+	scroller.displayScroll(nextMessage, MD_Parola::LEFT, MD_Parola::SCROLL_LEFT, frameDelay);
 }
 
 void bufferLininoCommunication(char nextChar) {
-  // store the last three chars we've received over serial from linino
-  lininoChars[0] = lininoChars[1];
-  lininoChars[1] = lininoChars[2];
-  lininoChars[2] = nextChar;
+	// store the last three chars we've received over serial from linino
+	lininoChars[0] = lininoChars[1];
+	lininoChars[1] = lininoChars[2];
+	lininoChars[2] = nextChar;
 }
 
 // http://stackoverflow.com/questions/20169474/char-array-comparison-in-c
 short hasLininoSaid(char sequence[]) {
-  int i;
+	int i;
   
-  for(i = 0; i < strlen(lininoChars); i++) {
-    if(lininoChars[i] != sequence[i]) {
-      return 0;
-    }
-  }
+	for(i = 0; i < strlen(lininoChars); i++) {
+		if(lininoChars[i] != sequence[i]) {
+			return 0;
+		}
+	}
   
-  return 1;
+	return 1;
 }
