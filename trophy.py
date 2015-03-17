@@ -89,6 +89,9 @@ def get_league_data():
   json_response = urllib.urlopen(league_api_path)
   data = json.loads(json_response.read())
 
+  if data['error']:
+    return ['There was a problem loading the league standings.']
+
   standings = [league_standings_intro]
 
   for collection_name in league_api_collection_names:
